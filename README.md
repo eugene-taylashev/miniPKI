@@ -1,2 +1,4 @@
 # miniPKI
-Simple PKI using OpenSSL
+A simple PKI structure using OpenSSL
+
+
