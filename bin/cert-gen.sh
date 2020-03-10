@@ -7,7 +7,7 @@
 #		common_name - (optional) host common_name, 
 #		by default host_name.conestogac.on.ca
 #		
-# Dependancy: requires openssl and /CA/openssl.cnf
+# Dependancy: requires openssl and minipki.cnf
 #
 # Updated on Mar 10, 2020 by Eugene Taylashev
 #
@@ -39,7 +39,7 @@ echo "--- Generating private key for $HNAME as ${HNAME}.key"
 
 echo "--- Generating the certificate signing request as ${HNAME}.csr"
 #--  generate the certificate signing request.
-/usr/bin/openssl req -new -sha256 -config /CA/openssl.cnf \
+/usr/bin/openssl req -new -sha256 -config minipki.cnf \
 -key ${HNAME}.key -out ${HNAME}.csr \
 -subj "/C=CA/ST=ON/L=Waterloo/O=Conestoga College/CN=${CNAME}"
 
