@@ -37,7 +37,7 @@ mv $CNAME.csr $CA_DIR/csr
 
 #-- sign the CSR with the CA root key for 2 years
 /usr/bin/openssl ca -in $CA_DIR/csr/$CNAME.csr -notext \
--config $CA_DIR/openssl.cnf -extensions server_cert \
+-config $CA_DIR/minipki.cnf -extensions server_cert \
 -out $CNAME.crt -days $CERT_DAYS -md sha256
 
 #-- save an extra copy of the certificate (one is in /CA/newcerts)
