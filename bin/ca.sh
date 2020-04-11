@@ -1,11 +1,15 @@
 #!/bin/bash
 #-----------------------------------------------------------------------------
-# Script creates a root CA key and the self-signed certificate
+# Create a key and the self-signed certificate for root CA 
 # Run this script only once for your miniPKI
 #
-#  Usage: $0 [switch] [subject]
+#  Usage: $0 [switch] [subject or hostname]
+#
 #  where optional subject in format:
 #    "/C=US/ST=CA/L=Fremont/O=Example Inc./CN=root.example.com"
+#        default: /CN=ca
+#        or hostname (i.e ca.example.com)"
+#
 #    optional switches:
 #    -v  be verbose
 #    -h  this help
@@ -18,10 +22,17 @@
 #  Variable declarations
 #
 #=============================================================================
+#-- get the absolute path of the base directory
+#DIR_BASE=$(realpath $0 | sed 's/^\(.*\)\/bin\/.*$/\1/')
+#source $DIR_BASE/etc/params.sh		#-- Use common variables
+
+#-- non absolute path
 source ./etc/params.sh		#-- Use common variables
 
-SVER="20200409"			#-- Updated on Apr 8, 2020 by Eugene
+SVER="20200411_01"		#-- Script version
 FLOG="$DIR_LOG/ca.log"	#-- Log file with details (overwritten)
+CNAME="ca"                #-- common name (CN) or hostname
+SUBJ="$CA_SUBJ"         #-- Subject for the certificate
 VERBOSE=0				#-- 1 - be verbose flag
 
 
@@ -37,10 +48,13 @@ source $DIR_LIB/functions.sh		#-- Use common functions
 #-----------------------------------------------------------------------------
 usage(){
 	echo "Create a root CA key and a self-signed certificate"
-	echo "Usage: $0 [switch] [subject]"
+	echo " "
+	echo "Usage: $0 [switch] [subject or hostname]"
 	echo "    where optional subject in format:"
     echo "    \"/C=US/ST=CA/L=Fremont/O=Example Inc./CN=root.example.com\""
-	echo "       default: \"$SUBJ_PREFIX/CN=rootCA\""
+	echo "       default: \"$CA_SUBJ\""
+    echo "    or hostname (i.e ca.example.com)"
+	echo " "
 	echo "    optional switches:"
     echo "      -v  be verbose"
     echo "      -h  this help"
@@ -68,9 +82,29 @@ shift $((OPTIND -1))
 
 check_dir_structure	#-- verify that right directories are created
 
-#-- create the log file
+#-- create the log file (overwritten)
 echo "#=============================================================================" >$FLOG	
-dlog "Create root CA script ver $SVER on $(date)"
+dlog "[ok] - Create Certificate Authority (CA) key and certificate"
+dlog "[ok] - script ver $SVER on $(date)"
+dlog "[ok] - common functions ver $FVER"
+
+exit_if_not_root 		#-- Check execution rights
+
+#-- get Subject from input parameters
+if [[ $# -ge 1 ]] ; then
+	TMP=$1
+	if [ "$TMP" = "--help" ] ; then usage ; fi
+	SUBJ="$TMP"	#-- Subject for the root CA
+	shift
+fi
+
+#-- normilize hostname and subject
+parse_subject_hostname 
+#-- redefine key/cert file names
+CA_SUBJ=$SUBJ
+CA_KEY=$DIR_KEY/$CNAME.key  #-- Certificate Authority private key
+CA_CRT=$DIR_CRT/$CNAME.crt  #-- Certificate Authority public certificate
+
 
 #-- Verify that the script is not executed by mistake. 
 #   Do not overwrite exisitng root CA files
@@ -81,30 +115,22 @@ if [ -f $CA_KEY ] || [ -f $CA_CRT ] ; then
   usage
 fi
 
-#-- get Subject from input parameters
-if [[ $# -ge 1 ]] ; then
-	TMP=$1
-	if [ "$TMP" = "--help" ] ; then usage ; fi
-	CA_SUBJ="$TMP"	#-- Subject for the root CA
-	shift
+#-- Report settings
+dlog "[ok] - key size $CA_SIZE bits"
+dlog "[ok] - validity $CA_DAYS days"
+dlog "[ok] - subject '$CA_SUBJ'"
+if [ -f $FCONF ] ; then
+	dlog "[ok] - configuration file $FCONF"
+else
+	derr "[not ok] - ERROR: no configuration file $FCONF"
+	my_abort
 fi
-
-exit_if_not_root 		#-- Check execution rights
-
-#-- Append Subject prefix, if defined
-# this step is debatable. Should the admin enter the right subject?
-if [ "$SUBJ_PREFIX" != "" ] ; then
-	CA_SUBJ="${SUBJ_PREFIX}${CA_SUBJ}"
-fi
-
-#-- inform the config
-dlog "[ok] - rootCA's size $CA_SIZE bits"
-dlog "[ok] - rootCA's validity $CA_DAYS days"
-dlog "[ok] - rootCA's subject='$CA_SUBJ'"
+dlog "[ok] - key will be $CA_KEY"
+dlog "[ok] - certificate will be $CA_CRT"
 
 set_rand	#-- Get some randomness
 
-#-- Create the root CA key and self-signed certificate
+#-- Create the root CA key and self-signed the certificate
 openssl req -x509 -newkey rsa:$CA_SIZE -rand $FRND -keyout $CA_KEY \
 -sha256 -out $CA_CRT -nodes -days $CA_DAYS \
 -config $FCONF -extensions v3_ca \
@@ -127,8 +153,8 @@ else
 fi
 
 #-- Output the certificate info for verification
-openssl x509 -in $CA_CRT -text -noout >>$FLOG
-[ $VERBOSE -eq 1 ] && openssl x509 -in $CA_CRT -text -noout
+out_cert $CA_CRT >>$FLOG
+#[ $VERBOSE -eq 1 ] && out_cert $CA_CRT
 
 dlog "[ok] - done. See the log in $FLOG"
 exit 0 #-- We are done

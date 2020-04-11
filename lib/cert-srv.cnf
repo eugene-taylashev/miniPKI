@@ -1,0 +1,10 @@
+
+[ server_cert ]
+# Extensions for server certificates (`man x509v3_config`).
+basicConstraints = critical, CA:FALSE
+#nsCertType = server
+#nsComment = "OpenSSL Generated Server Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer:always
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment, keyAgreement
+extendedKeyUsage = critical, serverAuth

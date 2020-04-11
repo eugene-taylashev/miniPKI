@@ -102,7 +102,7 @@ is_critical "[ok] - Revoked the certificate $FNAME" \
 
 #--  update CRL
 openssl ca -config $FCONF -gencrl -out $CRL \
--keyfile $SA_KEY -cert $SA_CRT 2>>$FLOG
+-keyfile $SA_KEY -sha256 -cert $SA_CRT 2>>$FLOG
 is_critical "[ok] - Updated CRL $CRL" \
 "[not ok] - ERROR updating CRL $CRL"
 

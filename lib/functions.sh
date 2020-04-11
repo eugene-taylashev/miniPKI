@@ -4,7 +4,7 @@
 #
 # Copyright (C) by Eugene Taylashev 2020 under the MIT License
 #-----------------------------------------------------------------------------
-
+FVER="20200410_02"
 #=============================================================================
 #
 #  Function declarations
@@ -114,7 +114,7 @@ out_cert(){
 #------------------------------------------------------------------------------
 out_csr(){
 	CSR="$1"
-	[ -f $CSR ] && openssl req -in $CSR -text -noout -verify 
+	[ -f $CSR ] && openssl req -in $CSR -text -noout
 }
 # function out_cert
 
@@ -153,15 +153,19 @@ check_dir_structure(){
 		#-- create directory for private keys
 		mkdir $DIR_KEY
 		chmod 700 $DIR_KEY
-		echo "do not delete this file. It is used for permission checking" >$FTST
-		chmod 400 $FTST
 	fi
 	! [ -d $DIR_CSR ] && mkdir $DIR_CSR		#-- directory for certificate signing requests (CSR) 
 	! [ -d $DIR_CRT ] && mkdir $DIR_CRT		#-- directory for certificates
 	! [ -d $DIR_NCRT ] && mkdir $DIR_NCRT	#-- backup directory for certificates
 	! [ -d $DIR_LOG ] && mkdir $DIR_LOG		#-- directory for logs
-	! [ -d $DIR_CRL ] && mkdir $DIR_CRL		#-- directory for logs
+	! [ -d $DIR_CRL ] && mkdir $DIR_CRL		#-- directory for CRLS
+	! [ -d $DIR_TMP ] && mkdir $DIR_TMP		#-- temp directory
+	
 	#-- create needed files
+	if ! [ -f $FTST ] ; then
+		echo "do not delete this file. It is used for permission checking" >$FTST
+		chmod 400 $FTST
+	fi
 	! [ -f $DIR_LIB/index.txt ] && touch $DIR_LIB/index.txt
 	! [ -f $DIR_LIB/index.txt.attr ] && echo "unique_subject = yes" >$DIR_LIB/index.txt.attr
 	! [ -f $DIR_LIB/serial ] && echo "1000" >$DIR_LIB/serial

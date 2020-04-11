@@ -1,20 +1,8 @@
-[ ca ]
-# `man ca`
-default_ca = CA_default
-
-#== Directory and file locations.
-[ CA_default ]
-dir               = .
 certs             = $dir/certs
 crl_dir           = $dir/crl
 new_certs_dir     = $dir/certs.backup
 database          = $dir/lib/index.txt
 serial            = $dir/lib/serial
-
-# For certificate revocation lists.
-crlnumber         = $dir/lib/crlnumber
-crl_extensions    = crl_ext
-default_crl_days  = 30
 
 # SHA-1 is deprecated, so use SHA-2 instead.
 default_md        = sha256
@@ -61,21 +49,3 @@ localityName_default            = Fremont
 0.organizationName_default      = Example
 #organizationalUnitName_default = IT
 emailAddress_default           = info@example.com
-
-[ v3_intermediate_ca ]
-# Extensions for a typical intermediate CA (`man x509v3_config`).
-basicConstraints        = critical, CA:TRUE, pathlen:1
-subjectKeyIdentifier    = hash
-authorityKeyIdentifier  = keyid:always, issuer:always
-keyUsage                = critical, cRLSign, digitalSignature, keyCertSign
-
-[ v3_ca ]
-# Extensions for a typical CA (`man x509v3_config`).
-basicConstraints        = critical, CA:TRUE
-subjectKeyIdentifier    = hash
-authorityKeyIdentifier  = keyid:always, issuer:always
-keyUsage                = critical, cRLSign, digitalSignature, keyCertSign
-
-[ crl_ext ]
-# Extension for CRLs (`man x509v3_config`).
-authorityKeyIdentifier=keyid:always
