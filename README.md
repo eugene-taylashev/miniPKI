@@ -96,7 +96,7 @@ Run
 bin/cert.sh [switch] subject_or_hostname
        where subject in format:
        "/C=US/ST=CA/L=Fremont/O=Example/CN=www.example.com"
-        default: \"${SUBJ_PREFIX}${SUBJ}\"
+        default: "${SUBJ_PREFIX}${SUBJ}"
        or hostname (i.e www)
 
        optional switches:
@@ -135,7 +135,7 @@ The miniPKI directory and file structure:
 * `./log` - directory for logs. Purge these logs if too big
 
 See Also:
-* (OpenSSL Certificate Authority)[https://jamielinux.com/docs/openssl-certificate-authority/index.html]
+* [OpenSSL Certificate Authority](https://jamielinux.com/docs/openssl-certificate-authority/index.html)
 
 ### Subject Alternative Name (SAN) 
 [SAN - wiki](https://en.wikipedia.org/wiki/Subject_Alternative_Name)
