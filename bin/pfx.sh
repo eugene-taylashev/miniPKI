@@ -69,7 +69,7 @@ while getopts ":hv" opt; do
       ;;
     b ) IS_COPY=1 # copy PFX to ./
       ;;
-    * ) usage
+    h ) usage
       ;;
   esac
 done
@@ -118,7 +118,7 @@ fi
 dlog "[ok] - converted cert will be '$FPFX'"
 
 #-- Convert
-openssl openssl pkcs12 -inkey $H_KEY -in $H_CRT -export -out $FPFX 2>>$FLOG
+openssl pkcs12 -inkey $H_KEY -in $H_CRT -export -out $FPFX 2>>$FLOG
 is_critical "[ok] - convert $CNAME to $FPFX" \
 "[not ok] - ERROR converting $CNAME to $FPFX"
 

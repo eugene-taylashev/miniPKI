@@ -34,17 +34,22 @@ Consider the following:
 * root CA's common name (CN). Could be *rootCA.example.com*. *ca* is used by default
 * validity period. 20 years by default
   
-Run `bin/ca.sh [switch] [subject or hostname]`
-`  where optional subject in format:
+Run 
+```bash
+bin/ca.sh [switch] [subject or hostname]
+  where optional subject in format:
     "/C=US/ST=CA/L=Fremont/O=Example Inc./CN=root.example.com"
 	dafault "/CN=ca"
 	
     optional switches:
-      -v  be verbose`
+      -v  be verbose
+```
 
 If you used the non-default root name, update the following parameters in the file **etc/params.sh**:
-`CA_KEY=$DIR_KEY/ca.key	#-- root CA private key
-CA_CRT=$DIR_CRT/ca.crt  #-- root CA public certificate`
+```
+CA_KEY=$DIR_KEY/ca.key	#-- root CA private key
+CA_CRT=$DIR_CRT/ca.crt  #-- root CA public certificate
+```
 
 You will use these parameters to sign SAs
 
@@ -54,21 +59,25 @@ Consider the following:
 * SA's common name (CN). Could be *sa1.example.com*. *sa* is used by default
 * validity period. 10 years by default
 
-Run `bin/sa.sh [switch] [subject or hostname]`
+Run 
+```
+bin/sa.sh [switch] [subject or hostname]
 
-`          where optional subject in format:
+          where optional subject in format:
           "/C=US/ST=CA/L=Fremont/O=Example/CN=sa1.example.com"
             default: "${SUBJ_PREFIX}${SA_SUBJ}"
          or hostname (i.e sa1.example.com)
 
           optional switches:
             -c  ca_cert.crt	CA's certificate
-            -k  ca.key			CA's key
-            -v  				be verbose`
-
+            -k  ca.key		CA's key
+            -v  		be verbose
+```
 If you used the non-default SA name(s), update the following parameters in the file **etc/params.sh** with the primary SA's name:
-`SA_KEY=$DIR_KEY/sa.key      #-- Signing Authority private key
-SA_CRT=$DIR_CRT/sa.crt      #-- Signing Authority public certificate`
+```
+SA_KEY=$DIR_KEY/sa.key      #-- Signing Authority private key
+SA_CRT=$DIR_CRT/sa.crt      #-- Signing Authority public certificate
+```
 
 You will use these parameters to sign all others certificates
 
@@ -82,8 +91,23 @@ Create the file **ca-chain.pem**: `cat certs/ca.crt certs/sa.crt >./certs/ca-cha
 
 ### Step S+1: Creat a private key and a certificate for a server or client
 
-Run `bin/cert.sh [switch] subject_or_hostname`
+Run 
+```
+bin/cert.sh [switch] subject_or_hostname
+       where subject in format:
+       "/C=US/ST=CA/L=Fremont/O=Example/CN=www.example.com"
+        default: \"${SUBJ_PREFIX}${SUBJ}\"
+       or hostname (i.e www)
 
+       optional switches:
+         -a 'subjectAltName' - i.e. 'DNS:example.com,DNS:www.example.com'
+         -b              copy the key and the cert to a local directory
+         -c  sa_cert.crt SA's certificate
+         -k  sa.key      SA's key
+         -u              create a CLIENT certificate (SERVER by default)
+         -v              be verbose
+         -h              this help
+```
 
 ## Description
 
@@ -114,12 +138,12 @@ See Also:
 * (OpenSSL Certificate Authority)[https://jamielinux.com/docs/openssl-certificate-authority/index.html]
 
 ### Subject Alternative Name (SAN) 
-(SAN - wiki)[https://en.wikipedia.org/wiki/Subject_Alternative_Name]
-TLS server certificates must present the DNS name of the server in the Subject Alternative Name extension of the certificate. DNS names in the CommonName of a certificate are no longer trusted.(Apple support)[https://support.apple.com/en-us/HT210176]
+[SAN - wiki](https://en.wikipedia.org/wiki/Subject_Alternative_Name)
+TLS server certificates must present the DNS name of the server in the Subject Alternative Name extension of the certificate. DNS names in the CommonName of a certificate are no longer trusted.[Apple support](https://support.apple.com/en-us/HT210176)
 Source: https://gist.github.com/fntlnz/cf14feb5a46b2eda428e000157447309
 It has become important (and modern Firefox and Chrome at least demand it) that certificates be generated specifying DNS entries representing the domain name using the subjectAltName config setting. Source: https://stackoverflow.com/a/49087278.
 
-Examples from (man)[https://www.openssl.org/docs/manmaster/man5/x509v3_config.html#Subject-Alternative-Name]:
+Examples from [man](https://www.openssl.org/docs/manmaster/man5/x509v3_config.html#Subject-Alternative-Name):
 * email:copy,email:my@other.address,URI:http://my.url.here/
 * IP:192.168.7.1
 * IP:13::17
