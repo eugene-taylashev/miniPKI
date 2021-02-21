@@ -1,7 +1,8 @@
 # miniPKI
 miniPKI is a set of scripts to build a simple PKI structure using OpenSSL.
+
 Purposes:
-* generate server or client X.509 certificates 
+* generate server, client or peer X.509 certificates using ECDSA with prime256v1
   * for mutual TLS verification/authentication
   * with Subject Alternative Name (SAN) 
 * Control certificate expiration
@@ -12,10 +13,10 @@ From a terminology perspective: an Intermediate Certificate Authority (CA) is ca
 ## Quick Start
 
 * Clone the miniPKI: `git clone ` and change the directory: `cd miniPKI`
-* Create a Certificate Authority (CA): `sudo bin/ca.sh`
-* Create a Signing Authority (SA): `sudo bin/sa.sh`
+* Create a Certificate Authority (CA): `sudo bin/ca.sh '/CN=ca.example.com'`
+* Create a Signing Authority (SA): `sudo bin/sa.sh '/CN=sa.example.com'`
 * Create the chain of certificates CA+SA: `sudo cat certs/ca.crt certs/sa.crt >certs/ca-chain.pem`
-* `for(;;)` Create a private key and a X.509 certificate signed by the SA: `sudo bin/cert.sh server1`
+* `for(;;)` Create a private key and a X.509 certificate signed by the SA: `sudo bin/cert.sh -a 'DNS:server1.example.com,IP:10.0.0.100' server1`
 * Create key and certificate for a client: `sudo bin/cert.sh -u client1`
 * Check soon-to-expiry certificates: `sudo bin/check.sh`
 * Revoke a certificate: `sudo bin/revoke.sh server1.crt`
@@ -23,6 +24,8 @@ From a terminology perspective: an Intermediate Certificate Authority (CA) is ca
 
 ## Detailed Instructions
 Things to consider before generating keys and certificates:
+* Dependency: these scripts use [OpenSSL](https://www.openssl.org/). Please install it first.
+* Cryptography: by default these scripts use **ECDSA** with [prime256v1]9https://tools.ietf.org/html/rfc44920. To use well-known **RSA** add option `-r` to all scripts
 * Location of your PKI. Good place will be `/var/CA`
 * Ownership of your PKI. By default **root** owns everything. That is why you need to run scripts as `sudo`. However, it could be owned by an automation ID. Then, run scripts under this ID without `sudo`
 * Domain Name for your certificates. The DNS name should be included into a Subject Alternative Name (SAN) as per [requirements](https://support.apple.com/en-us/HT210176). But consider to use it for hostnames as well (i.e. server1.example.com). So, your key/certificate will be saved as server1.example.com.key / server1.example.com.crt
@@ -42,6 +45,7 @@ bin/ca.sh [switch] [subject or hostname]
 	dafault "/CN=ca"
 	
     optional switches:
+      -r  use RSA, by default: ECDSA with prime256v1
       -v  be verbose
 ```
 
@@ -71,6 +75,7 @@ bin/sa.sh [switch] [subject or hostname]
           optional switches:
             -c  ca_cert.crt	CA's certificate
             -k  ca.key		CA's key
+            -r                  use RSA, by default: ECDSA with prime256v1	    
             -v  		be verbose
 ```
 If you used the non-default SA name(s), update the following parameters in the file **etc/params.sh** with the primary SA's name:
@@ -100,11 +105,14 @@ bin/cert.sh [switch] subject_or_hostname
        or hostname (i.e www)
 
        optional switches:
-         -a 'subjectAltName' - i.e. 'DNS:example.com,DNS:www.example.com'
+         -a 'subjectAltName' - i.e. 'DNS:example.com,DNS:www.example.com,IP:10.0.0.100'
          -b              copy the key and the cert to a local directory
          -c  sa_cert.crt SA's certificate
          -k  sa.key      SA's key
-         -u              create a CLIENT certificate (SERVER by default)
+         -u              create a CLIENT certificate
+	 -p              create a PEER certificate (SERVER+CLIENT) [by default]
+	 -s              create a SERVER certificate
+	 -r              use RSA, by default: ECDSA with prime256v1
          -v              be verbose
          -h              this help
 ```
