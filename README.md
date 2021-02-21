@@ -25,7 +25,7 @@ From a terminology perspective: an Intermediate Certificate Authority (CA) is ca
 ## Detailed Instructions
 Things to consider before generating keys and certificates:
 * Dependency: these scripts use [OpenSSL](https://www.openssl.org/). Please install it first.
-* Cryptography: by default these scripts use **ECDSA** with [prime256v1]9https://tools.ietf.org/html/rfc44920. To use well-known **RSA** add option `-r` to all scripts
+* Cryptography: by default these scripts use **ECDSA** with [prime256v1](https://tools.ietf.org/html/rfc4492). To use well-known **RSA** add option `-r` to all scripts
 * Location of your PKI. Good place will be `/var/CA`
 * Ownership of your PKI. By default **root** owns everything. That is why you need to run scripts as `sudo`. However, it could be owned by an automation ID. Then, run scripts under this ID without `sudo`
 * Domain Name for your certificates. The DNS name should be included into a Subject Alternative Name (SAN) as per [requirements](https://support.apple.com/en-us/HT210176). But consider to use it for hostnames as well (i.e. server1.example.com). So, your key/certificate will be saved as server1.example.com.key / server1.example.com.crt
