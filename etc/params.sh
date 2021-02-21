@@ -27,7 +27,7 @@ DIR_TMP=$DIR_BASE/tmp       #-- directory for dynamic configuration files
 
 #-- Typical Server/Client params
 SUBJ_PREFIX="" #-- prefix for all subjects i.e. /C=US/ST=CA/L=Fremont/O=Example
-KSIZE=2048                  #-- size of the key
+KSIZE=2048                  #-- size of the RSA key
 KDAYS=730                   #-- certificate validity in days
 
 CA_CHAIN=$DIR_CRT/ca-chain.pem #-- CA+SA certificates

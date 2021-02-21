@@ -2,9 +2,9 @@
 #-----------------------------------------------------------------------------
 # Common functions for miniPKI
 #
-# Copyright (C) by Eugene Taylashev 2020 under the MIT License
+# Copyright (C) by Eugene Taylashev 2021 under the MIT License
 #-----------------------------------------------------------------------------
-FVER="20200410_02"
+FVER="20210221_01"
 #=============================================================================
 #
 #  Function declarations
@@ -92,6 +92,20 @@ exit_if_not_root(){
 
 
 #------------------------------------------------------------------------------
+# Check that OpenSSL is installed, and exit with error if not
+#------------------------------------------------------------------------------
+exit_if_no_openssl(){
+        if [ $(which openssl 2>/dev/null ) ] ; then
+		dlog "[ok] - OpenSSL is installed"
+	else
+		derr "[not ok] - no OpenSSL. Install it..."
+		my_abort
+	fi
+}
+# function exit_if_no_openssl
+
+
+#------------------------------------------------------------------------------
 #  Get some randomness
 #------------------------------------------------------------------------------
 set_rand(){
@@ -172,3 +186,4 @@ check_dir_structure(){
 	! [ -f $DIR_LIB/crlnumber ] && echo "1000" >$DIR_LIB/crlnumber
 }
 # function check_dir_structure
+

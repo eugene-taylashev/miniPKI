@@ -11,12 +11,13 @@
 #          or hostname (i.e sa1.example.com)
 #
 #          optional switches:
-#            -c  ca_cert.crt	CA's certificate
-#            -k  ca.key			CA's key
-#            -v  				be verbose
-#            -h  				this help
+#            -c  ca_cert.crt    CA's certificate
+#            -k  ca.key         CA's key
+#            -r                 use RSA, by default: ECDSA with prime256v1
+#            -v                 be verbose
+#            -h                 this help
 #
-# Copyright (C) by Eugene Taylashev 2020 under the MIT License
+# Copyright (C) by Eugene Taylashev 2021 under the MIT License
 #-----------------------------------------------------------------------------
 
 #=============================================================================
@@ -31,10 +32,11 @@
 #-- non absolute path
 source ./etc/params.sh      #-- Use common variables
 
-SVER="20200410_02"      #-- Script version
+SVER="20210221_01"      #-- Script version
 FLOG="$DIR_LOG/sa.log"  #-- Log file with details (append)
 CNAME=""                #-- common name (CN) or hostname
 SUBJ="$SA_SUBJ"         #-- Subject for the certificate
+IS_RSA=0                #-- 0 - ECDSA; 1 - RSA
 VERBOSE=0               #-- 1 - be verbose flag
 
 
@@ -50,19 +52,20 @@ source $DIR_LIB/functions.sh        #-- Use common functions
 #-----------------------------------------------------------------------------
 usage(){
     echo "Create Signing Authority (SA) key and certificate"
-	echo " "
+    echo " "
     echo "Usage: $0 [switch] [subject or hostname]"
-	echo " "
+    echo " "
     echo "    where optional subject in format:"
     echo "    \"/C=US/ST=CA/L=Fremont/O=Example/CN=sa1.example.com\""
     echo "      default: \"${SUBJ_PREFIX}${SA_SUBJ}\""
     echo "    or hostname (i.e sa1.example.com)"
-	echo " "
+    echo " "
     echo "    optional switches:"
-    echo "      -c  ca_cert.crt CA's certificate"
-    echo "      -k  ca.key      CA's key"
-    echo "      -v              be verbose"
-    echo "      -h              this help"
+    echo "      -c ca_cert.crt CA's certificate, by default: $CA_CRT"
+    echo "      -k ca.key      CA's key, by default: $CA_KEY"
+    echo "      -r             use RSA, by default: ECDSA with prime256v1"
+    echo "      -v             be verbose"
+    echo "      -h             this help"
     exit 0
 }
 # function usage
@@ -75,7 +78,7 @@ usage(){
 #=============================================================================
 
 #-- Check input parameters
-while getopts ":hvk:c:" opt; do
+while getopts ":hvrk:c:" opt; do
   case ${opt} in
     k )
       CA_KEY=$OPTARG
@@ -85,6 +88,8 @@ while getopts ":hvk:c:" opt; do
       ;;
     : )
       echo "Invalid option: -$OPTARG requires an argument (run -h for help)" 1>&2
+      ;;
+    r ) IS_RSA=1  # generate RSA key + cert
       ;;
     v ) VERBOSE=1 # be verbose flag=1
       ;;
@@ -102,6 +107,7 @@ dlog "[ok] - Create Signing Authority (SA) key and certificate"
 dlog "[ok] - script ver $SVER on $(date)"
 dlog "[ok] - common functions ver $FVER"
 
+exit_if_no_openssl      #-- Check if OpenSSL is installed
 exit_if_not_root        #-- Check execution rights
 
 #-- get Subject from input parameters
@@ -112,11 +118,18 @@ if [[ $# -ge 1 ]] ; then
     shift
 fi
 
+#-- inform about ECDSA/RSA
+if [ $IS_RSA -eq 1 ] ; then
+    dlog "[ok] - use RSA for key and certificate"
+else 
+    dlog "[ok] - use ECDSA with prime256v1 for key and certificate"
+fi
+
 #-- normilize hostname and subject
 parse_subject_hostname 
 
 #-- Report settings
-dlog "[ok] - key size $SA_SIZE bits"
+[ $IS_RSA -eq 1 ] && dlog "[ok] - key size $SA_SIZE bits"
 dlog "[ok] - validity $SA_DAYS days"
 dlog "[ok] - subject '$SUBJ'"
 dlog "[ok] - hostname '$CNAME'"
@@ -162,8 +175,14 @@ fi
 set_rand    #-- Get some randomness
 
 #-- Create Signing Authority's key and certificate signing request (CSR)
-openssl req -new -newkey rsa:$SA_SIZE -rand $FRND -keyout $SA_KEY \
--nodes -out $SA_CSR -config $FCONF -sha256 -subj $SUBJ 2>>$FLOG
+if [ $IS_RSA -eq 1 ] ; then
+    openssl req -new -newkey rsa:$SA_SIZE -rand $FRND -keyout $SA_KEY \
+    -nodes -out $SA_CSR -config $FCONF -sha256 -subj $SUBJ 2>>$FLOG
+else
+    openssl req -new -newkey ec -pkeyopt ec_paramgen_curve:prime256v1 \
+    -rand $FRND -keyout $SA_KEY -nodes -out $SA_CSR -sha256 \
+    -config $FCONF -subj $SUBJ 2>>$FLOG
+fi
 is_critical "[ok] - Created SA key and certificate signing request as $SA_KEY; $SA_CSR" \
 "[not ok] - ERROR creating SA key and certificate signing request as $SA_KEY; $SA_CSR"
 
@@ -179,6 +198,13 @@ is_critical "[ok] - Signed the SA's signing request as $SA_CRT" \
 #-- verify that the private key exists
 if [ -f $SA_KEY ] ; then
     dlog "[ok] - SA's private key $SA_KEY"
+
+    #-- check the key with OpenSSL
+    if [ $IS_RSA -eq 1 ] ; then
+        openssl rsa -in $SA_KEY -check -noout 2>>$FLOG
+    else
+        openssl ec -in $SA_KEY -check -noout 2>>$FLOG
+    fi
 else
     derr "[not ok] - ERROR: SA's private key $SA_KEY does NOT exist"
 fi
