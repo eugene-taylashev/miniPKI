@@ -1,5 +1,5 @@
 # miniPKI
-miniPKI is a set of scripts to build a simple PKI structure using OpenSSL.
+miniPKI is a set of scripts to build a simple PKI structure using OpenSSL. Similar as the [Search Guard offline TLS tool](https://docs.search-guard.com/latest/offline-tls-tool)
 
 Purposes:
 * generate server, client or peer X.509 certificates using ECDSA with prime256v1
